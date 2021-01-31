@@ -117,11 +117,10 @@ namespace BeanSupreme.v1
             gameObject.SetActive(vis);
         }
 
-        public float sendDamage(float speed)
+        public float sendDamage(float speed,int actor)
         {
             float newSpeed = (speed * Squishiness);
             float damage = newSpeed * (float)RoomManager.I.Settings["BaseDamageFactor"];
-            PV.RPC("takeDamage", RpcTarget.All, damage);
             return newSpeed;
         }
 

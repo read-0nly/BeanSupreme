@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using Photon.Pun;
 using Photon.Chat;
 using System.IO;
+using eg = ExitGames.Client.Photon;
 namespace BeanSupreme.v1
 {
 
@@ -24,10 +25,19 @@ namespace BeanSupreme.v1
             DontDestroyOnLoad(gameObject);
             I = this;
             PV = GetComponent<PhotonView>();
+
         }
         // Start is called before the first frame update
         void Start()
         {
+            eg.Hashtable newHT = new eg.Hashtable();
+            newHT = PhotonNetwork.LocalPlayer.CustomProperties;
+            newHT["stance"] = 0;
+            newHT["score"] = 0;
+            newHT["falling"] = false;
+            newHT["hasjump"] = false;
+            newHT["health"] = 0;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(newHT);
 
         }
 

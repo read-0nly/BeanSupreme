@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Photon.Pun;
+using Photon.Realtime;
 using Photon.Chat;
 using System.IO;
 
@@ -64,9 +65,9 @@ namespace BeanSupreme.v1
             Settings.Add("PlayerJumpStrength", 10f);
             Settings.Add("PlayerDriftControl", 0.02f);
             //Drink me eat me
-            Settings.Add("PlayerScaleFactor", 0.95f);
-            Settings.Add("PlayerCrouchScaleFactor", 0.75f);
-            Settings.Add("PlayerCrawlScaleFactor", 0.50f);
+            Settings.Add("PlayerScaleFactor", 0.7f);
+            Settings.Add("PlayerCrouchScaleFactor", 0.5f);
+            Settings.Add("PlayerCrawlScaleFactor", 0.3f);
 
             //Environmental
             Settings.Add("BaseSquishiness", 1f);
@@ -123,30 +124,42 @@ namespace BeanSupreme.v1
             {
                 setup();
                 GameObject[] AllObj = SceneManager.GetActiveScene().GetRootGameObjects();
-                ArrayList plaspa = new ArrayList(); 
-                ArrayList objspa = new ArrayList();
+                GameObject[] Objects = new GameObject[0] ;
+                GameObject[] Players=new GameObject[0];
                 foreach (GameObject go in AllObj)
                 {
                     switch (go.name)
                     {
-                        case "SpawnPlayer":
+                        case "PlayerSpawns":
                             {
-                                plaspa.Add(go);
+                                Transform[] t = go.transform.GetComponentsInChildren<Transform>();
+                                Players = new GameObject[t.Length];
+                                int i = 0;
+                                foreach(Transform go2 in t)
+                                {
+                                    Players[i] = go2.gameObject;
+                                    i++;
+                                }
                                 break;
                             }
-                        case "SpawnObject":
+                        case "ObjectSpawns":
                             {
-                                objspa.Add(go);
+                                Transform[] t = go.transform.GetComponentsInChildren<Transform>();
+                                Objects = new GameObject[t.Length];
+                                int i = 0;
+                                foreach (Transform go2 in t)
+                                {
+                                    Objects[i] = go2.gameObject;
+                                    i++;
+                                }
                                 break;
                             }
                     }
 
                 }
-                playerSpawns = new GameObject[plaspa.Count];
-                objectSpawns = new GameObject[objspa.Count];
-                spawnItems = (int)(objspa.Count);
-                for (int i = 0; i < playerSpawns.Length; i++) { playerSpawns[i] = (GameObject)(plaspa[i]); }
-                for (int i = 0; i < objectSpawns.Length; i++) { objectSpawns[i] = (GameObject)(objspa[i]); }
+                playerSpawns = Players;
+                objectSpawns = Objects;
+                spawnItems = (int)((Objects.Length)/2f);
                 PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "PlayerManager.v1"), Vector3.zero, Quaternion.identity);
                 om = (PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "ObjectManager"), Vector3.zero, Quaternion.identity)).GetComponent<ObjectManager>();
 

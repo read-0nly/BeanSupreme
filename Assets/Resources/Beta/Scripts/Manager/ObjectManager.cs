@@ -30,15 +30,26 @@ public class ObjectManager : MonoBehaviour
             pv = GetComponent<PhotonView>();
             if (!pv.IsMine) return;
 
+            int itemI = Random.Range(0, RoomManager.I.spawnableObjects.Count);
+            int itemL = Random.Range(0, RoomManager.I.objectSpawns.Length);
             for (int i = 0; i < RoomManager.I.spawnItems; i++)
             {
-                int itemI = Random.Range(0, RoomManager.I.spawnableObjects.Count);
-                int itemL = Random.Range(0, RoomManager.I.objectSpawns.Length);
                 objectsInWorld.Add(PhotonNetwork.Instantiate(
                     RoomManager.I.spawnableObjects[itemI],
                     RoomManager.I.objectSpawns[itemL].transform.position,
                     RoomManager.I.objectSpawns[itemL].transform.rotation
                     ));
+                RoomManager.I.objectSpawns[itemL].SetActive(false);
+                itemI = Random.Range(0, RoomManager.I.spawnableObjects.Count);
+                int j = 0;
+                while (!RoomManager.I.objectSpawns[itemL].gameObject.activeSelf && j < RoomManager.I.spawnItems) { 
+                    itemL = Random.Range(0, RoomManager.I.objectSpawns.Length);
+                    j++;
+                }
+            }
+            foreach(GameObject go in RoomManager.I.objectSpawns)
+            {
+                RoomManager.I.objectSpawns[itemL].SetActive(true);
             }
 
         }

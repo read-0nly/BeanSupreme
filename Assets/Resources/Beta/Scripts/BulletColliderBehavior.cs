@@ -32,14 +32,11 @@ namespace BeanSupreme.v1
 
         private void OnTriggerEnter(Collider other)
         {
-            Debug.Log("Collided: "+other.name);
             try
             {
                 PlayerObject pc = other.transform.parent.gameObject.GetComponent<PlayerObject>();
-                if (pc)
-                {
-                    Debug.Log("Collision was player");
-                    pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, 10, pc.PV.Owner.ActorNumber);
+                if (pc) { 
+                    pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, 10, pc.PV.Owner.ActorNumber, Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber);
 
                 }
                 else

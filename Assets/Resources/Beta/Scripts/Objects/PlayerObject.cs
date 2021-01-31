@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using eg = ExitGames.Client.Photon;
 using System.IO;
 using Photon.Realtime;
 
@@ -45,16 +46,13 @@ namespace BeanSupreme.v1
         public float CrouchScaleFactor;
         public float CrawlScaleFactor;
         public float scaleshift = 0.01f;
-        public bool hasjump = false;
-        [SerializeField] public bool falling = false;
         private float stepThresh = 0.01f;
         private float dropThresh = -0.2f;
-        [SerializeField] private float stepFreq = 0.6f;
+        private float stepFreq = 0.6f;
         private float stepFreqDefault = 0.6f;
-        [SerializeField] private int stance = 0;
-        [SerializeField] public float lastStep = 0f;
+        public float lastStep = 0f;
         public Vector2 lastMove = new Vector2(0f,0f);
-        [SerializeField] private float lastRise =0f;
+        private float lastRise =0f;
         private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
         public UnityEngine.UI.Text Stats;
         FireableObject item;
@@ -64,7 +62,7 @@ Current Clip: {2}
 Clip Size: {3}
 Total Ammo: {4}
 Score: {5}
-Livws: {6}
+Lives: {6}
 ";
         public List<AudioSource> sounds = new List<AudioSource>();
         private void Awake()
@@ -109,6 +107,13 @@ Livws: {6}
             }
             base.Start();
             stand();
+            if (!PV.IsMine) return;
+            eg.Hashtable newHT = new eg.Hashtable();
+            newHT["stance"] = 0;
+            newHT["falling"] = false;
+            newHT["hasjump"] = false;
+            newHT["health"] = MaxHealth;
+            pv.Owner.SetCustomProperties(newHT);
         }
 
         public override void Update()
@@ -116,15 +121,23 @@ Livws: {6}
             base.Update();
         }
         [PunRPC]
-        public void TakeDamage(int damage, int target)
+        public void TakeDamage(int damage, int target, int sender)
         {
-            if (pv.Owner.ActorNumber == target)
+            if (pv.Owner.ActorNumber == target // &&!(target==sender) //This adds a self-hit check
+                )
             {
-                health -= damage;
-                if (falling) sounds[3].Play();
+                if ((bool)pv.Owner.CustomProperties["falling"]) sounds[3].Play();
                 //Debug.LogError(health);
-                if (!(health > 0)&&PV.IsMine)
+                if (!pv.IsMine) return;
+                health -= damage;
+                if (!(health > 0))
                 {
+                    Player player = PhotonNetwork.CurrentRoom.GetPlayer(sender);
+
+                    eg.Hashtable newHT = new eg.Hashtable();
+                    newHT["score"] = (int)player.CustomProperties["score"] + 1;
+                    player.SetCustomProperties(newHT);
+
                     die();
                 }
             }
@@ -157,11 +170,11 @@ Livws: {6}
             head.transform.eulerAngles = new Vector3(lastMouse.x, lastMouse.y, 0);
             try
             {
-                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, item.clipRounds, item.clipSize, item.totalRounds, 0, 0);
+                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, item.clipRounds, item.clipSize, item.totalRounds, PhotonNetwork.LocalPlayer.CustomProperties["score"], -1);
             }
 
             catch {
-                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, 0, 0, 0, 0, 0);
+                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, 0, 0, 0, PhotonNetwork.LocalPlayer.CustomProperties["score"], -1);
             }
         }
         public void reload()
@@ -170,16 +183,16 @@ Livws: {6}
         }
         public void move(float horizontalInput, float verticalInput, bool jump,bool sprint)
         {
-            float stanceFactor = (stance == 2 ? CrawlScaleFactor : (stance == 1 ? CrouchScaleFactor : ScaleFactor));
+            float stanceFactor = ((int)pv.Owner.CustomProperties["stance"] == 2 ? CrawlScaleFactor : ((int)pv.Owner.CustomProperties["stance"] == 1 ? CrouchScaleFactor : ScaleFactor));
             Vector3 newVect =
                 (((body.transform.forward.normalized) * (verticalInput * MoveSpeed)) +
                 ((body.transform.right.normalized) * (horizontalInput * MoveSpeed))) * (sprint ? RunFactor : 1) * stanceFactor;
             body.velocity = new Vector3(
-                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.x * stanceFactor : (!hasjump?body.velocity.x+(newVect.x*DriftControl): body.velocity.x)),
-                (jump && !hasjump && body.velocity.y < 0.003f && body.velocity.y > -0.003f ? JumpStrength * stanceFactor : body.velocity.y),
-                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.z * stanceFactor : (!hasjump ? body.velocity.z + (newVect.z * DriftControl) : body.velocity.z))
+                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.x * stanceFactor : (!(bool)pv.Owner.CustomProperties["hasjump"] ?body.velocity.x+(newVect.x*DriftControl): body.velocity.x)),
+                (jump && !(bool)pv.Owner.CustomProperties["hasjump"] && body.velocity.y < 0.003f && body.velocity.y > -0.003f ? JumpStrength * stanceFactor : body.velocity.y),
+                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.z * stanceFactor : (!(bool)pv.Owner.CustomProperties["hasjump"] ? body.velocity.z + (newVect.z * DriftControl) : body.velocity.z))
             );
-            hasjump = jump;
+            pv.Owner.CustomProperties["hasjump"] = jump;
             /*transform.Translate(
                 ((transform.worldToLocalMatrix * transform.forward.normalized) * (verticalInput * moveScale)) +
                 ((transform.worldToLocalMatrix * transform.right.normalized) * (horizontalInput * moveScale))
@@ -229,20 +242,23 @@ Livws: {6}
                 if (Time.time - lastStep > stepFreq)
                 {
                     lastStep = Time.time;
-                    sounds[stance].Play();
+                    sounds[(int)pv.Owner.CustomProperties["stance"]].Play();
 
                 }
             }
             lastMove.x = transform.GetChild(0).position.x;
             lastMove.y = transform.GetChild(0).position.z;
             float drop = transform.GetChild(0).position.y - lastRise;
-          //  Debug.Log(drop);
-            if (drop < dropThresh) falling = true;
+
+            eg.Hashtable newHT = new eg.Hashtable();
+            //  Debug.Log(drop);
+            if (drop < dropThresh&&pv.IsMine) newHT["falling"] = true;
             else if (drop>(dropThresh/2))
             {
-                if(falling)sounds[3].Play();
-                falling = false;
+                if((bool)pv.Owner.CustomProperties["falling"])sounds[3].Play();
+                if(pv.IsMine) newHT["falling"] = false;
             }
+            pv.Owner.SetCustomProperties(newHT);
             lastRise = transform.GetChild(0).position.y;
 
         }
@@ -279,25 +295,31 @@ Livws: {6}
         {
             if (g == null) return;
             body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.2f);
-            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor, ScaleFactor);
-            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/ScaleFactor, 1/ScaleFactor);
-            stance = 0;
+            body.transform.localScale = new Vector3(ScaleFactor-(ScaleFactor/10), ScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ (ScaleFactor - (ScaleFactor / 10)), 1/ScaleFactor, 1/ScaleFactor);
+            eg.Hashtable newHT = new eg.Hashtable();
+            newHT["stance"] = 0;
+            pv.Owner.SetCustomProperties(newHT);
         }
         public void crouch()
         {
             if (g == null) return;
             body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.1f);
-            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor * CrouchScaleFactor, ScaleFactor);
-            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/(ScaleFactor * CrouchScaleFactor), 1/ScaleFactor);
-            stance = 1;
+            body.transform.localScale = new Vector3(ScaleFactor - (ScaleFactor / 10), ScaleFactor * CrouchScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ (ScaleFactor - (ScaleFactor / 10)), 1/(ScaleFactor * CrouchScaleFactor), 1/ScaleFactor);
+            eg.Hashtable newHT = new eg.Hashtable();
+            newHT["stance"] = 1;
+            pv.Owner.SetCustomProperties(newHT);
         }
         public void crawl()
         {
             if (g == null) return;
             body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.05f);
-            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor * CrawlScaleFactor, ScaleFactor);
-            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/(ScaleFactor * CrawlScaleFactor), 1/ScaleFactor);
-            stance = 2;
+            body.transform.localScale = new Vector3((ScaleFactor - (ScaleFactor / 10)), ScaleFactor * CrawlScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ (ScaleFactor - (ScaleFactor / 10)), 1/(ScaleFactor * CrawlScaleFactor), 1/ScaleFactor);
+            eg.Hashtable newHT = new eg.Hashtable();
+            newHT["stance"] = 2;
+            pv.Owner.SetCustomProperties(newHT);
         }
 
         public bool swap(int rotAmt)
