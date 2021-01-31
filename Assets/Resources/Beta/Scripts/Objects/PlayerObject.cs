@@ -1,0 +1,343 @@
+﻿
+/* Player Object exists as an abstraction that persists between lives - it puppets it's instance in the world.
+ * 
+ */
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using System.IO;
+using Photon.Realtime;
+
+namespace BeanSupreme.v1
+{
+
+    public class PlayerObject : _Object, IPunOwnershipCallbacks
+    {
+        //Basic vars
+        public List<_Object> inventory = new List<_Object>();
+        public List<_Object> basicLoadout = new List<_Object>();
+
+
+        //Instance Details
+        public Camera cam;
+        public Transform head;
+        public Rigidbody body;
+        public GameObject hand;
+        public Photon.Pun.PhotonView pv;
+
+        //Setting-based vars
+        public float FlashlightBrightness;
+        public int MaxInventory;
+        public int CurrentItemIndex = -1;
+        public float MoveSpeed;
+        public float RunFactor;
+        public float StaminaMax;
+        public float StaminaRecovery;
+
+        public float CrouchFactor;
+        public float CrawlFactor;
+
+        public float JumpStrength;
+        public float DriftControl;
+
+        public float ScaleFactor;
+        public float CrouchScaleFactor;
+        public float CrawlScaleFactor;
+        public float scaleshift = 0.01f;
+        public bool hasjump = false;
+        [SerializeField] public bool falling = false;
+        private float stepThresh = 0.01f;
+        private float dropThresh = -0.2f;
+        [SerializeField] private float stepFreq = 0.6f;
+        private float stepFreqDefault = 0.6f;
+        [SerializeField] private int stance = 0;
+        [SerializeField] public float lastStep = 0f;
+        public Vector2 lastMove = new Vector2(0f,0f);
+        [SerializeField] private float lastRise =0f;
+        private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
+        public UnityEngine.UI.Text Stats;
+        FireableObject item;
+        private string statFString = @"Player: {0}
+Health: {1}
+Current Clip: {2}
+Clip Size: {3}
+Total Ammo: {4}
+Score: {5}
+Livws: {6}
+";
+        public List<AudioSource> sounds = new List<AudioSource>();
+        private void Awake()
+        {
+
+            Prefab = "PlayerAnchor";
+            //Loud settings from round
+            MaxHealth = (float)RoomManager.I.Settings["PlayerMaxHealth"];
+            health = MaxHealth;
+            MaxInventory = (int)RoomManager.I.Settings["PlayerMaxInventory"];
+            Squishiness = (float)RoomManager.I.Settings["PlayerSquishiness"];
+
+
+
+            MoveSpeed = (float)RoomManager.I.Settings["PlayerMoveSpeed"]; ;
+            RunFactor = (float)RoomManager.I.Settings["PlayerRunFactor"]; ;
+            StaminaMax = (float)RoomManager.I.Settings["PlayerStaminaMax"]; ;
+            StaminaRecovery = (float)RoomManager.I.Settings["PlayerStaminaRecovery"]; ;
+
+            CrouchFactor = (float)RoomManager.I.Settings["PlayerCrouchFactor"]; ;
+            CrawlFactor = (float)RoomManager.I.Settings["PlayerCrawlFactor"]; ;
+
+            JumpStrength = (float)RoomManager.I.Settings["PlayerJumpStrength"]; ;
+            DriftControl = (float)RoomManager.I.Settings["PlayerDriftControl"]; ;
+
+            ScaleFactor = (float)RoomManager.I.Settings["PlayerScaleFactor"]; ;
+            CrouchScaleFactor = (float)RoomManager.I.Settings["PlayerCrouchScaleFactor"]; ;
+            CrawlScaleFactor = (float)RoomManager.I.Settings["PlayerCrawlScaleFactor"]; ;
+
+            pv = gameObject.GetComponent<PhotonView>();
+            Stats = MultiMenu.HUD.I.Status;
+        }
+        // Player = PhotonNetwork.Instantiate(Path.Combine("Prefab", "PlayerCharacter"), new Vector3(Random.Range(-2.0f, 2.0f), 0, Random.Range(-2.0f, 2.0f)), Quaternion.identity); ;
+        // Start is called before the first frame update
+        public override void Start()
+        {
+            if (!pv.IsMine)
+            {
+                Destroy(cam.gameObject);
+                body.GetComponent<Rigidbody>().isKinematic = true;
+                
+            }
+            base.Start();
+            stand();
+        }
+
+        public override void Update()
+        {
+            base.Update();
+        }
+        [PunRPC]
+        public void TakeDamage(int damage, int target)
+        {
+            if (pv.Owner.ActorNumber == target)
+            {
+                health -= damage;
+                if (falling) sounds[3].Play();
+                //Debug.LogError(health);
+                if (!(health > 0)&&PV.IsMine)
+                {
+                    die();
+                }
+            }
+        }
+
+
+        public override void use() {
+            try
+            {
+                ((_Object)inventory[CurrentItemIndex]).use();
+            }
+            catch{ };
+        }
+        public override void toss() { }
+        public void quitGame()
+        {
+            Application.Quit(0);
+        }
+
+
+        public void look(float x,float y, float camSens)
+        {
+            if (!body)  return;
+            GameObject player = body.gameObject;
+
+            lastMouse = new Vector3(head.transform.eulerAngles.x + -y * camSens, player.transform.eulerAngles.y + x * camSens, 0);
+
+            head.transform.eulerAngles = lastMouse;
+            player.transform.eulerAngles = new Vector3(0, lastMouse.y, 0);
+            head.transform.eulerAngles = new Vector3(lastMouse.x, lastMouse.y, 0);
+            try
+            {
+                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, item.clipRounds, item.clipSize, item.totalRounds, 0, 0);
+            }
+
+            catch {
+                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, 0, 0, 0, 0, 0);
+            }
+        }
+        public void reload()
+        {
+            ((FireableObject)inventory[CurrentItemIndex]).startReload();
+        }
+        public void move(float horizontalInput, float verticalInput, bool jump,bool sprint)
+        {
+            float stanceFactor = (stance == 2 ? CrawlScaleFactor : (stance == 1 ? CrouchScaleFactor : ScaleFactor));
+            Vector3 newVect =
+                (((body.transform.forward.normalized) * (verticalInput * MoveSpeed)) +
+                ((body.transform.right.normalized) * (horizontalInput * MoveSpeed))) * (sprint ? RunFactor : 1) * stanceFactor;
+            body.velocity = new Vector3(
+                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.x * stanceFactor : (!hasjump?body.velocity.x+(newVect.x*DriftControl): body.velocity.x)),
+                (jump && !hasjump && body.velocity.y < 0.003f && body.velocity.y > -0.003f ? JumpStrength * stanceFactor : body.velocity.y),
+                (body.velocity.y < 1f && body.velocity.y > -1f && !jump ? newVect.z * stanceFactor : (!hasjump ? body.velocity.z + (newVect.z * DriftControl) : body.velocity.z))
+            );
+            hasjump = jump;
+            /*transform.Translate(
+                ((transform.worldToLocalMatrix * transform.forward.normalized) * (verticalInput * moveScale)) +
+                ((transform.worldToLocalMatrix * transform.right.normalized) * (horizontalInput * moveScale))
+
+                );*/
+            stepFreq = (sprint ? stepFreqDefault / 2 : stepFreqDefault);
+            if(sprint) try { ((FireableObject)inventory[CurrentItemIndex]).startReload(); } catch { };
+
+
+
+        }
+        public override void grab(_Object o)
+        {
+            if (inventory.Count < MaxInventory && o && PV.IsMine)
+            {
+                o.PV.TransferOwnership(pv.Owner.ActorNumber);
+                o.PV.RPC("snap", RpcTarget.All, head.gameObject.GetComponent<PhotonView>().ViewID,false);
+                inventory.Add(o);
+                swap(1);
+            }
+        }
+        //spawn at selected spawnpoint
+        public override bool spawn(Transform spawnpoint)
+        {
+            try
+            {
+                bool baseBool = base.spawn(spawnpoint);
+                CurrentItemIndex = -1;
+                inventory = new List<_Object>();
+                return true && baseBool;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public void makeSound()
+        {
+            float translation = UnityEngine.Mathf.Abs(UnityEngine.Mathf.Sqrt(
+                ((transform.GetChild(0).position.x - lastMove.x) * (transform.GetChild(0).position.x - lastMove.x)
+                ) + (
+                (transform.GetChild(0).position.z - lastMove.y) * (transform.GetChild(0).position.z - lastMove.y)
+                )));
+           // Debug.Log(translation);
+            if (translation > stepThresh)
+            {
+                if (Time.time - lastStep > stepFreq)
+                {
+                    lastStep = Time.time;
+                    sounds[stance].Play();
+
+                }
+            }
+            lastMove.x = transform.GetChild(0).position.x;
+            lastMove.y = transform.GetChild(0).position.z;
+            float drop = transform.GetChild(0).position.y - lastRise;
+          //  Debug.Log(drop);
+            if (drop < dropThresh) falling = true;
+            else if (drop>(dropThresh/2))
+            {
+                if(falling)sounds[3].Play();
+                falling = false;
+            }
+            lastRise = transform.GetChild(0).position.y;
+
+        }
+        public override void drop()
+        {
+            if (inventory.ToArray().Length < 1) return;
+            _Object item = ((_Object)inventory[CurrentItemIndex]);
+            item.PV.RPC("snap", RpcTarget.All, -1,true);
+            inventory.RemoveAt(CurrentItemIndex);
+            item.gameObject.GetComponent<_Object>().PV.TransferOwnership(PhotonNetwork.CurrentRoom.masterClientId);
+            item.transform.localScale = new Vector3(1, 1, 1);
+            this.swap(-1);
+
+        }
+        public override bool die()
+        {
+            try
+            {
+                Stats.text = "";
+                for (int indexi = 0; indexi < inventory.ToArray().Length; indexi++)
+                {
+                    Debug.Log("Dropping " + ((_Object)inventory[CurrentItemIndex]).g.name);
+                    drop();
+                }
+                PlayerManager.I.GetComponent<PlayerControl>().Die();
+                return base.die() && true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public void stand()
+        {
+            if (g == null) return;
+            body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.2f);
+            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/ScaleFactor, 1/ScaleFactor);
+            stance = 0;
+        }
+        public void crouch()
+        {
+            if (g == null) return;
+            body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.1f);
+            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor * CrouchScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/(ScaleFactor * CrouchScaleFactor), 1/ScaleFactor);
+            stance = 1;
+        }
+        public void crawl()
+        {
+            if (g == null) return;
+            body.transform.localPosition = body.transform.localPosition + (body.transform.up * 0.05f);
+            body.transform.localScale = new Vector3(ScaleFactor, ScaleFactor * CrawlScaleFactor, ScaleFactor);
+            hand.transform.localScale = new Vector3(1/ScaleFactor, 1/(ScaleFactor * CrawlScaleFactor), 1/ScaleFactor);
+            stance = 2;
+        }
+
+        public bool swap(int rotAmt)
+        {
+            if (g == null) return false;
+            if (inventory.Count > 0)
+            {
+                int oldI = CurrentItemIndex;
+                CurrentItemIndex = (CurrentItemIndex + inventory.ToArray().Length + rotAmt) % inventory.ToArray().Length;
+                _Object current = null;
+                try { current = hand.GetComponentInChildren<_Object>(); } catch { }
+                if (current != null) current.PV.RPC("snap", RpcTarget.All, -1, false);
+                _Object picked = null;
+                try { picked = ((_Object)inventory[CurrentItemIndex]); } catch { }
+                if (picked != null) picked.PV.RPC("snap", RpcTarget.All, head.gameObject.GetComponent<PhotonView>().ViewID, true);
+                try { item = ((FireableObject)inventory[CurrentItemIndex]); } catch { }
+                return true;
+            }
+            else
+            {
+                CurrentItemIndex = -1;
+                item = null;
+                return false;
+            }
+        }
+
+        public void FixedUpdate()
+        {
+
+            makeSound();
+        }
+
+        public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
+        {
+            //throw new System.NotImplementedException();
+        }
+
+        public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
+        {
+            //throw new System.NotImplementedException();
+        }
+    }
+}
