@@ -82,7 +82,7 @@ namespace BeanSupreme.v1
                     PV.ObservedComponents.Remove(GetComponent<PhotonTransformView>());
                 makePhysical(false,vis);
                 transform.parent = PhotonView.Find(pid).gameObject.transform.Find("Hand");
-                transform.GetChild(0).localPosition = new Vector3(0, 0, 0);
+                if(transform.childCount>0) transform.GetChild(0).localPosition = new Vector3(0, 0, 0);
                 transform.localPosition = new Vector3(0, 0, 0);
                 transform.position = PhotonView.Find(pid).gameObject.transform.Find("Hand").position;
                 transform.rotation = PhotonView.Find(pid).gameObject.transform.Find("Hand").rotation;

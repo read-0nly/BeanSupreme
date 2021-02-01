@@ -114,6 +114,16 @@ Lives: {6}
             newHT["hasjump"] = false;
             newHT["health"] = MaxHealth;
             pv.Owner.SetCustomProperties(newHT);
+
+            if (PhotonNetwork.LocalPlayer.CustomProperties["Team"] != null)
+            {
+                Color c = new Color();
+                float[] components = (float[])PhotonNetwork.LocalPlayer.CustomProperties["Team"];
+                c.r = components[0];
+                c.g = components[1];
+                c.b = components[2];
+                body.GetComponent<Renderer>().material.color = c;
+            }
         }
 
         public override void Update()
