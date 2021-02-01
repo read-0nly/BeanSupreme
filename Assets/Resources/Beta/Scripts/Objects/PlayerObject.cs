@@ -137,7 +137,7 @@ Lives: {6}
                     eg.Hashtable newHT = new eg.Hashtable();
                     newHT["score"] = (int)player.CustomProperties["score"] + 1;
                     player.SetCustomProperties(newHT);
-
+                    RoomManager.I.checkWin();
                     die();
                 }
             }
@@ -179,7 +179,7 @@ Lives: {6}
         }
         public void reload()
         {
-            ((FireableObject)inventory[CurrentItemIndex]).startReload();
+            ((FireableObject)inventory[CurrentItemIndex]).startReload(false);
         }
         public void move(float horizontalInput, float verticalInput, bool jump,bool sprint)
         {
@@ -199,7 +199,7 @@ Lives: {6}
 
                 );*/
             stepFreq = (sprint ? stepFreqDefault / 2 : stepFreqDefault);
-            if(sprint) try { ((FireableObject)inventory[CurrentItemIndex]).startReload(); } catch { };
+            if(sprint) try { ((FireableObject)inventory[CurrentItemIndex]).startReload(true); } catch { };
 
 
 

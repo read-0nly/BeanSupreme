@@ -23,7 +23,7 @@ namespace BeanSupreme.v1
                 Physics.Raycast(new Ray(this.transform.position, this.transform.up * speed), out rh, speed*speed);
                 if (rh.collider)
                 {
-                    if (!(rh.collider.CompareTag("Bullet") || rh.collider.CompareTag("Object"))) OnTriggerEnter(rh.collider);
+                    OnTriggerEnter(rh.collider);
                 }
             }
 
@@ -32,25 +32,29 @@ namespace BeanSupreme.v1
 
         private void OnTriggerEnter(Collider other)
         {
-            try
+            if (!(other.CompareTag("Bullet") || other.CompareTag("Object")))
             {
-                PlayerObject pc = other.transform.parent.gameObject.GetComponent<PlayerObject>();
-                if (pc) { 
-                    pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, 10, pc.PV.Owner.ActorNumber, Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber);
+                try
+                {
+                    PlayerObject pc = other.transform.parent.gameObject.GetComponent<PlayerObject>();
+                    if (pc)
+                    {
+                        pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, 10, pc.PV.Owner.ActorNumber, Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber);
 
+                    }
+                    else
+                    {
+
+                        //other.gameObject.GetComponent<Renderer>().material.SetColor("_Color",Color.green);
+                    }
                 }
-                else
+                catch
                 {
 
-                    //other.gameObject.GetComponent<Renderer>().material.SetColor("_Color",Color.green);
                 }
+                if (this.transform.parent.GetComponent<BulletBehavior>().GetComponent<Photon.Pun.PhotonView>().IsMine)
+                    Photon.Pun.PhotonNetwork.Destroy(this.transform.parent.gameObject);
             }
-            catch
-            {
-
-            }
-            if(this.transform.parent.GetComponent<BulletBehavior>().GetComponent<Photon.Pun.PhotonView>().IsMine)
-            Photon.Pun.PhotonNetwork.Destroy(this.transform.parent.gameObject);
 
         }
     }

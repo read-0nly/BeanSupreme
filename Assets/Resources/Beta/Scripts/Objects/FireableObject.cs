@@ -24,6 +24,7 @@ namespace BeanSupreme.v1
         public int clipRounds = 6;
         public int clipSize = 6;
         public int totalRounds = 24;
+        public Transform bulletAnchor;
         // Start is called before the first frame update
         public override void Start()
         {
@@ -55,8 +56,8 @@ namespace BeanSupreme.v1
                 if (clipRounds > 0 && !isReloading)
                 {
                     GameObject Bullet = PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "Bullet"),
-                        transform.GetChild(0).position +
-                        transform.forward.normalized * 0.5f, transform.rotation);
+                        bulletAnchor.position +
+                        bulletAnchor.forward.normalized * 0.5f, bulletAnchor.rotation);
                     Bullet.GetComponent<BulletBehavior>().bulletSpeed = BulletSpeedFactor;
                     Bullet.GetComponent<BulletBehavior>().bulletDrop = (float)RoomManager.I.Settings["BulletSlowFactor"];
                     LastFire = Time.time;
@@ -64,24 +65,27 @@ namespace BeanSupreme.v1
                 }
                 else if (!isReloading)
                 {
-                    startReload();
+                    startReload(false);
                 }
             }
         }
-        public virtual void startReload()
+        public virtual void startReload(bool fast)
         {
-            reloadTime = Time.time;
+            reloadTime = Time.time-(fast?(reloadDuration/3)*2:0);
             isReloading = true;
         }
         public virtual void reloadCheck()
         {
 
-            if (isReloading && totalRounds > 0)
+            if (isReloading)
             {
-                int delta = (totalRounds>clipSize?clipSize:totalRounds);
-                delta = (clipRounds + delta > clipSize ? clipSize - clipRounds : delta);
-                clipRounds += delta;
-                totalRounds -= delta;
+                if (totalRounds > 0)
+                {
+                    int delta = (totalRounds > clipSize ? clipSize : totalRounds);
+                    delta = (clipRounds + delta > clipSize ? clipSize - clipRounds : delta);
+                    clipRounds += delta;
+                    totalRounds -= delta;
+                }
                 isReloading = false;
             }
         }

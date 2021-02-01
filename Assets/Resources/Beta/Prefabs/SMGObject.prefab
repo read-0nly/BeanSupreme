@@ -141,7 +141,6 @@ MonoBehaviour:
   OwnershipTransfer: 1
   ObservedComponents:
   - {fileID: 5929621549562182205}
-  - {fileID: 1066889670292856082}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -225,6 +224,7 @@ MonoBehaviour:
   clipRounds: 6
   clipSize: 6
   totalRounds: 24
+  bulletAnchor: {fileID: 1443857483217286915}
 --- !u!1 &5614592952136449919
 GameObject:
   m_ObjectHideFlags: 0

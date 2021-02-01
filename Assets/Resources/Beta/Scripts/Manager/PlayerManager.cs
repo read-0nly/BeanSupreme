@@ -44,7 +44,7 @@ namespace BeanSupreme.v1
         public void spawnPlayer(Transform spawn)
         {
 
-            Player = PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", playerPrefab), spawn.position, spawn.rotation); 
+            Player = PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", playerPrefab), spawn.position, spawn.rotation);
         }
 
         // Update is called once per frame

@@ -44,6 +44,14 @@ namespace BeanSupreme.v1
             Settings.Add("SMGMaxRound", 320);
             Settings.Add("SMGSpawnRounds", 160);
             Settings.Add("SMGReloadTime", 0.7f);
+            Settings.Add("ShotgunSpeed", 0.3f);
+            Settings.Add("ShotgunFireRate", 1f);
+            Settings.Add("ShotgunClipSize", 2);
+            Settings.Add("ShotgunMaxRound", 16);
+            Settings.Add("ShotgunSpawnRounds", 8);
+            Settings.Add("ShotgunReloadTime", 1f);
+            Settings.Add("ShotgunSpread", 15f);
+            Settings.Add("ShotgunAmount", 10);
             Settings.Add("BulletSpeedFactor", 0.5f);
             Settings.Add("BulletSlowFactor", 0.999f);
             Settings.Add("BulletDropSpeed", 0.5f);
@@ -72,14 +80,17 @@ namespace BeanSupreme.v1
             //Environmental
             Settings.Add("BaseSquishiness", 1f);
             Settings.Add("DamageFactor", 20f);
-            Settings.Add("BaseLightBrightness", 1f);
+            Settings.Add("BaseLightBrightness", 0.5f);
             Settings.Add("FlashlightBrightness", 1f);
             Settings.Add("BaseFog", 0.5f);
 
+            Settings.Add("KillsToWin", 10);
+
             //g = PhotonNetwork.Instantiate(, spawnpoint.position, spawnpoint.rotation);
             string basepath = "Beta\\Prefabs";
-            spawnableObjects.Add(Path.Combine(basepath, PistolObject.Prefab));
-            spawnableObjects.Add(Path.Combine(basepath, SMGObject.Prefab));
+            //spawnableObjects.Add(Path.Combine(basepath, PistolObject.Prefab));
+            //spawnableObjects.Add(Path.Combine(basepath, SMGObject.Prefab));
+            spawnableObjects.Add(Path.Combine(basepath, ShotgunObject.Prefab));
         }
 
         private void Awake()
@@ -89,12 +100,22 @@ namespace BeanSupreme.v1
         void Start()
         {
             om.spawnItems();
+            foreach(GameObject go in SceneManager.GetActiveScene().GetRootGameObjects())
+            {
+                if (go.name == "Lights")
+                {
+                    for(int i = 0; i < go.transform.childCount; i++)
+                    {
+                        go.transform.GetChild(i).GetComponent<Light>().intensity = (float)Settings["BaseLightBrightness"];
+                    }
+                }
+            }
         }
 
         // Update is called once per frame
         void Update()
         {
-
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Winner")) if ((int)PhotonNetwork.CurrentRoom.CustomProperties["Winner"] > -1) doWin();
         }
 
         public override void OnEnable()
@@ -118,6 +139,32 @@ namespace BeanSupreme.v1
 
         // Spawn objects
 
+        public void doWin()
+        {
+            PhotonNetwork.LeaveRoom();
+            PhotonNetwork.Destroy(PlayerManager.I.gameObject);
+            Cursor.lockState=CursorLockMode.None;
+            SceneManager.LoadScene(0);
+            PhotonNetwork.Destroy(gameObject);
+        }
+
+        public void checkWin()
+        {
+            int hasWon = -1;
+            foreach(Player p in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if (p.CustomProperties.ContainsKey("score")) if (!((int)p.CustomProperties["score"] < (int)Settings["KillsToWin"]))
+                {
+                    hasWon = p.ActorNumber;
+                }
+            }
+            if(hasWon>-1)
+            {
+                ExitGames.Client.Photon.Hashtable newHT = new ExitGames.Client.Photon.Hashtable();
+                newHT["Winner"] = hasWon;
+                PhotonNetwork.CurrentRoom.SetCustomProperties(newHT);
+            }
+        }
         void OnSceneLoaded(Scene s, LoadSceneMode l)
         {
             if (s.buildIndex == 1)
