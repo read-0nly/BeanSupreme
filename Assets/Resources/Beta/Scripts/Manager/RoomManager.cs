@@ -88,8 +88,8 @@ namespace BeanSupreme.v1
 
             //g = PhotonNetwork.Instantiate(, spawnpoint.position, spawnpoint.rotation);
             string basepath = "Beta\\Prefabs";
-            //spawnableObjects.Add(Path.Combine(basepath, PistolObject.Prefab));
-            //spawnableObjects.Add(Path.Combine(basepath, SMGObject.Prefab));
+            spawnableObjects.Add(Path.Combine(basepath, PistolObject.Prefab));
+            spawnableObjects.Add(Path.Combine(basepath, SMGObject.Prefab));
             spawnableObjects.Add(Path.Combine(basepath, ShotgunObject.Prefab));
         }
 
@@ -99,7 +99,7 @@ namespace BeanSupreme.v1
         // Start is called before the first frame update
         void Start()
         {
-            om.spawnItems();
+            if(om != null) om.spawnItems();
             foreach(GameObject go in SceneManager.GetActiveScene().GetRootGameObjects())
             {
                 if (go.name == "Lights")
@@ -170,9 +170,10 @@ namespace BeanSupreme.v1
             if (s.buildIndex == 1)
             {
                 setup();
+                
                 GameObject[] AllObj = SceneManager.GetActiveScene().GetRootGameObjects();
-                GameObject[] Objects = new GameObject[0] ;
-                GameObject[] Players=new GameObject[0];
+                GameObject[] Objects = new GameObject[0];
+                GameObject[] Players = new GameObject[0];
                 foreach (GameObject go in AllObj)
                 {
                     switch (go.name)
@@ -182,7 +183,7 @@ namespace BeanSupreme.v1
                                 Transform[] t = go.transform.GetComponentsInChildren<Transform>();
                                 Players = new GameObject[t.Length];
                                 int i = 0;
-                                foreach(Transform go2 in t)
+                                foreach (Transform go2 in t)
                                 {
                                     Players[i] = go2.gameObject;
                                     i++;
@@ -206,9 +207,11 @@ namespace BeanSupreme.v1
                 }
                 playerSpawns = Players;
                 objectSpawns = Objects;
-                spawnItems = (int)((Objects.Length)/2f);
-                PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "PlayerManager.v1"), Vector3.zero, Quaternion.identity);
-                om = (PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "ObjectManager"), Vector3.zero, Quaternion.identity)).GetComponent<ObjectManager>();
+                spawnItems = (int)((Objects.Length) / 2f);
+
+                if (PhotonNetwork.LocalPlayer.IsMasterClient) om = (PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "ObjectManager"), Vector3.zero, Quaternion.identity)).GetComponent<ObjectManager>();                
+                
+                PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "PlayerManager.v1"), Vector3.zero, Quaternion.identity);                
 
                 Cursor.lockState = CursorLockMode.Locked;
             }
