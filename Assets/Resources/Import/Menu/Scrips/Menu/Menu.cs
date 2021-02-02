@@ -32,8 +32,8 @@ namespace MultiMenu
             }
             menuDict["LoadingMenu"].SetActive(true);
 
-            PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.GameVersion = "MenuTestv1";
+            PhotonNetwork.ConnectUsingSettings();
             setMenu("MainMenu");
 
         }
@@ -63,6 +63,7 @@ namespace MultiMenu
         public override void OnConnected()
         {
             PhotonNetwork.LocalPlayer.NickName = (string.IsNullOrEmpty(preferredNick) ? "Player " + Random.Range(0, 1000).ToString("0000") : preferredNick);
+            HUD.I.Status.text = "Current Region: " + PhotonNetwork.CloudRegion;
             base.OnConnected();
         }
 
