@@ -13,11 +13,9 @@ namespace BeanSupreme.v1
         public Color color;
         public override void use()
         {
-            if (!PV.IsMine) return;
             Debug.Log("Painting");
 
-            if (transform.parent.parent.parent) try { transform.parent.parent.parent.gameObject.GetComponent<Renderer>().material.color=color; } catch { }
-
+            transform.parent.parent.parent.parent.GetComponent<PhotonView>().RPC("paint", RpcTarget.All, color.r, color.g, color.b);
 
             eg.Hashtable newHT = new eg.Hashtable();
             newHT["Team"] = new float[]{ color.r, color.g, color.b};

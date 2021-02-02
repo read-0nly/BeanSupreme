@@ -114,7 +114,12 @@ Lives: {6}
             newHT["hasjump"] = false;
             newHT["health"] = MaxHealth;
             pv.Owner.SetCustomProperties(newHT);
+            pv.RPC("paint", RpcTarget.All);
 
+        }
+        [PunRPC]
+        public void paint()
+        {
             if (PhotonNetwork.LocalPlayer.CustomProperties["Team"] != null)
             {
                 Color c = new Color();
@@ -124,10 +129,21 @@ Lives: {6}
                 c.b = components[2];
                 body.GetComponent<Renderer>().material.color = c;
             }
-        }
 
+        }
+        [PunRPC]
+        public void paint(float ri, float gi, float bi)
+        {
+            Color c = new Color();
+            c.r = ri;
+            c.g = gi;
+            c.b = bi;
+            body.GetComponent<Renderer>().material.color = c;
+
+        }
         public override void Update()
         {
+            if (body.transform.localPosition.y < -100 && PV.IsMine) if (PV.AmOwner) die(); else quitGame();
             base.Update();
         }
         [PunRPC]
