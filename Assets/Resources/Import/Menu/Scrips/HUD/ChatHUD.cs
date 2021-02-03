@@ -38,23 +38,21 @@ namespace MultiMenu
         void Update()
         {
             cClient.Service();
-        }
-        private void FixedUpdate()
-        {
             if (Input.GetButton("Chat") && !showInput && cClient.CanChat)
             {
                 showInput = true;
                 if (!cClient.CanChatInChannel(Channel)) cClient.Subscribe(Channel);
-                InputBox.gameObject.SetActive(showInput);
-                InputBox.enabled = showInput;
-                InputBox.ActivateInputField();
                 oldLock = Cursor.lockState;
                 Cursor.lockState = CursorLockMode.None;
+                InputBox.gameObject.SetActive(showInput);
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputBox.gameObject, null);
                 InputBox.Select();
+                InputBox.ActivateInputField();
 
             }
             else if (Input.GetButton("Submit") && showInput && cClient.CanChat)
             {
+                Debug.Log(InputBox.isFocused);
                 showInput = false;
                 string message = InputBox.text;
                 bool sendResult = (message != "" ? cClient.PublishMessage(Channel, message) : false);
@@ -70,14 +68,16 @@ namespace MultiMenu
                     rotateMessages(1);
                     chatHistory[chatHistory.Length - 1] = "Send Failed!";
                     printChat();
-                    InputBox.enabled = showInput;
                     InputBox.gameObject.SetActive(showInput);
                     Cursor.lockState = oldLock;
                     oldLock = CursorLockMode.Locked;
 
                 }
-            
+
             }
+        }
+        private void FixedUpdate()
+        {
         }
 
         public void connect()

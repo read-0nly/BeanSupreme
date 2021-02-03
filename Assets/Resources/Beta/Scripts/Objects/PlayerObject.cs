@@ -124,19 +124,19 @@ Lives: {6}
         [PunRPC]
         public void paint()
         {
-            if (PhotonNetwork.LocalPlayer.CustomProperties["Team"] != null)
+            if (pv.Owner.CustomProperties["Team"] != null)
             {
                 Color c = new Color();
-                float[] components = (float[])PhotonNetwork.LocalPlayer.CustomProperties["Team"];
+                float[] components = (float[])pv.Owner.CustomProperties["Team"];
                 c.r = components[0];
                 c.g = components[1];
                 c.b = components[2];
                 body.GetComponent<Renderer>().material.color = c;
             }
-            if (PhotonNetwork.LocalPlayer.CustomProperties["Hat"] != null)
+            if (pv.Owner.CustomProperties["Hat"] != null)
             {
                 Color c = new Color();
-                float[] components = (float[])PhotonNetwork.LocalPlayer.CustomProperties["Hat"];
+                float[] components = (float[])pv.Owner.CustomProperties["Hat"];
                 c.r = components[0];
                 c.g = components[1];
                 c.b = components[2];
@@ -154,10 +154,21 @@ Lives: {6}
             c.b = bi;
             body.GetComponent<Renderer>().material.color = c;
 
+            if (pv.Owner.CustomProperties["Hat"] != null)
+            {
+                c = new Color();
+                float[] components = (float[])pv.Owner.CustomProperties["Hat"];
+                c.r = components[0];
+                c.g = components[1];
+                c.b = components[2];
+                hat.material.color = c;
+                hatrim.material.color = c;
+            }
+
         }
         public override void Update()
         {
-            if (body.transform.localPosition.y < -100 && PV.IsMine) { Debug.LogError("Under Deathwall"); if (PV.AmOwner && PhotonNetwork.CurrentRoom.PlayerCount > 1) die(); else quitGame(); }
+            if (body.transform.localPosition.y < -100 && PV.IsMine) { Debug.LogError("Under Deathwall"); if (PV.Owner.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount > 1) die(); else quitGame(); }
             base.Update();
         }
         [PunRPC]
