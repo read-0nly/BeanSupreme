@@ -14,13 +14,14 @@ namespace BeanSupreme.v1
         void Start()
         {
             bornTime = Time.time;
+
         }
 
         // Update is called once per frame
         void FixedUpdate()
         {
             transform.GetChild(0).GetComponent<BulletColliderBehavior>().speed = bulletSpeed;
-            transform.Translate(transform.worldToLocalMatrix * transform.forward.normalized * bulletSpeed);
+            transform.Translate((transform.worldToLocalMatrix * transform.forward.normalized) * bulletSpeed);
             if (Time.time - bornTime > lifeTime)
                 Destroy(gameObject);
             bulletSpeed = bulletSpeed * bulletDrop;

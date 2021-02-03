@@ -56,6 +56,9 @@ namespace BeanSupreme.v1
         private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
         public UnityEngine.UI.Text Stats;
         FireableObject item;
+        Vector3 defaulthead = new Vector3(0,0,0);
+        public Renderer hat;
+        public Renderer hatrim;
         private string statFString = @"Player: {0}
 Health: {1}
 Current Clip: {2}
@@ -115,6 +118,7 @@ Lives: {6}
             newHT["health"] = MaxHealth;
             pv.Owner.SetCustomProperties(newHT);
             pv.RPC("paint", RpcTarget.All);
+            defaulthead = cam.transform.localPosition;
 
         }
         [PunRPC]
@@ -128,6 +132,16 @@ Lives: {6}
                 c.g = components[1];
                 c.b = components[2];
                 body.GetComponent<Renderer>().material.color = c;
+            }
+            if (PhotonNetwork.LocalPlayer.CustomProperties["Hat"] != null)
+            {
+                Color c = new Color();
+                float[] components = (float[])PhotonNetwork.LocalPlayer.CustomProperties["Hat"];
+                c.r = components[0];
+                c.g = components[1];
+                c.b = components[2];
+                hat.material.color = c;
+                hatrim.material.color = c;
             }
 
         }
@@ -143,16 +157,16 @@ Lives: {6}
         }
         public override void Update()
         {
-            if (body.transform.localPosition.y < -100 && PV.IsMine) if (PV.AmOwner) die(); else quitGame();
+            if (body.transform.localPosition.y < -100 && PV.IsMine) { Debug.LogError("Under Deathwall"); if (PV.AmOwner && PhotonNetwork.CurrentRoom.PlayerCount > 1) die(); else quitGame(); }
             base.Update();
         }
         [PunRPC]
-        public void TakeDamage(int damage, int target, int sender)
+        public void TakeDamage(float damage, int target, int sender)
         {
             if (pv.Owner.ActorNumber == target // &&!(target==sender) //This adds a self-hit check
                 )
             {
-                if ((bool)pv.Owner.CustomProperties["falling"]) sounds[3].Play();
+                sounds[3].Play();
                 //Debug.LogError(health);
                 if (!pv.IsMine) return;
                 health -= damage;
@@ -170,25 +184,46 @@ Lives: {6}
         }
 
 
-        public override void use() {
+        public override void use()
+        {
             try
             {
                 ((_Object)inventory[CurrentItemIndex]).use();
             }
-            catch{ };
+            catch { };
+        }
+        public void use2()
+        {
+            Debug.Log("Use2");
+            try
+            {
+                ((ScopedFireableObject)inventory[CurrentItemIndex]).use2();
+            }
+            catch { };
         }
         public override void toss() { }
         public void quitGame()
         {
+            Debug.LogError("User Quit!");
             Application.Quit(0);
         }
 
-
+        public void Observe(bool obsSw) {
+            if (obsSw)
+            {
+                cam.transform.localPosition = defaulthead + new Vector3(0, 0, 2);
+                cam.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
+            else
+            {
+                cam.transform.localPosition = defaulthead;
+                cam.transform.localRotation = Quaternion.Euler(0, 0 , 0);
+            }
+        }
         public void look(float x,float y, float camSens)
         {
             if (!body)  return;
             GameObject player = body.gameObject;
-
             lastMouse = new Vector3(head.transform.eulerAngles.x + -y * camSens, player.transform.eulerAngles.y + x * camSens, 0);
 
             head.transform.eulerAngles = lastMouse;
@@ -196,7 +231,7 @@ Lives: {6}
             head.transform.eulerAngles = new Vector3(lastMouse.x, lastMouse.y, 0);
             try
             {
-                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, health, item.clipRounds, item.clipSize, item.totalRounds, PhotonNetwork.LocalPlayer.CustomProperties["score"], -1);
+                Stats.text = string.Format(statFString, PhotonNetwork.LocalPlayer.NickName, (int)health, item.clipRounds, item.clipSize, item.totalRounds, PhotonNetwork.LocalPlayer.CustomProperties["score"], -1);
             }
 
             catch {
@@ -292,6 +327,7 @@ Lives: {6}
         {
             if (inventory.ToArray().Length < 1) return;
             _Object item = ((_Object)inventory[CurrentItemIndex]);
+            item.drop();
             item.PV.RPC("snap", RpcTarget.All, -1,true);
             inventory.RemoveAt(CurrentItemIndex);
             item.gameObject.GetComponent<_Object>().PV.TransferOwnership(PhotonNetwork.CurrentRoom.masterClientId);

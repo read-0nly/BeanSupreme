@@ -7,6 +7,7 @@ namespace BeanSupreme.v1
 {
     public class GenericObject : _Object
     {
+        bool triggered = false;
         // Start is called before the first frame update
         public override void Start()
         {
@@ -17,6 +18,18 @@ namespace BeanSupreme.v1
         public override void Update()
         {
             base.Update();
+        }
+
+        public override void use()
+        {
+            base.use();
+            triggered = !triggered;
+            this.makePhysical(triggered, triggered);
+        }
+        public override void drop()
+        {
+            triggered = false;
+            base.drop();
         }
     }
 }

@@ -15,10 +15,13 @@ namespace BeanSupreme.v1
         PlayerObject Player;
         float deathTime;
         float deathCooldown = 10;
-        float camSens = 4; //How sensitive it with mouse
+        public float camSens = 4; //How sensitive it with mouse
+        public static float camsensMax = 4;
         bool equipping = false;
         bool dropping = false;
         bool switching = false;
+        bool observing=false;
+        bool fire2 = false;
         private void Awake()
         {
             PV = GetComponent<PhotonView>();
@@ -63,6 +66,12 @@ namespace BeanSupreme.v1
                     {
                         Player.use();
                     }
+                    bool fire2t = Input.GetButton("Fire2");
+                    if (!fire2 && fire2t)
+                    {
+                        Player.use2();
+                    }
+                    fire2 = fire2t;
                     if (Input.GetButton("Equip"))
                     {
                         if (!equipping)
@@ -104,6 +113,19 @@ namespace BeanSupreme.v1
                     if (Input.GetButton("Crawl"))
                     {
                         Player.crawl();
+                    }
+                    if (Input.GetButton("Observe"))
+                    {
+                         if(observing == false)
+                        {
+                            Player.Observe(true);                            
+                        }
+                        observing = true;
+                    }
+                    else if (observing == true)
+                    {
+                        Player.Observe(false);
+                        observing = false;
                     }
                     float wheel = Input.GetAxis("Mouse ScrollWheel");
                     if (wheel != 0)

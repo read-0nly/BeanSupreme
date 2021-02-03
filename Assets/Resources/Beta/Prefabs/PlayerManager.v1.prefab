@@ -82,3 +82,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f837ec7f4e9d64b4b976a24341cfb627, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  camSens: 4

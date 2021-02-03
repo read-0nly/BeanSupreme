@@ -39,7 +39,7 @@ namespace BeanSupreme.v1
                     PlayerObject pc = other.transform.parent.gameObject.GetComponent<PlayerObject>();
                     if (pc)
                     {
-                        pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, 10, pc.PV.Owner.ActorNumber, Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber);
+                        pc.PV.RPC("TakeDamage", Photon.Pun.RpcTarget.All, baseDamage*speed, pc.PV.Owner.ActorNumber, this.GetComponent<Photon.Pun.PhotonView>().Owner.ActorNumber);
 
                     }
                     else

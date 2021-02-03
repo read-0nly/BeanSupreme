@@ -18,7 +18,6 @@ namespace BeanSupreme.v1
 
         public override void setup()
         {
-            base.setup();
             PistolSpeed = (float)RoomManager.I.Settings["SMGSpeed"];
             pistol = g;
             //BasicGunSettings
@@ -27,6 +26,7 @@ namespace BeanSupreme.v1
             clipSize = (int)RoomManager.I.Settings["SMGClipSize"];
             totalRounds = (int)RoomManager.I.Settings["SMGSpawnRounds"];
             reloadDuration = (float)RoomManager.I.Settings["SMGReloadTime"];
+            base.setup();
         }
     }
 }

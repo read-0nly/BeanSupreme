@@ -44,6 +44,7 @@ namespace MultiMenu
             if (Input.GetButton("Chat") && !showInput && cClient.CanChat)
             {
                 showInput = true;
+                if (!cClient.CanChatInChannel(Channel)) cClient.Subscribe(Channel);
                 InputBox.gameObject.SetActive(showInput);
                 InputBox.enabled = showInput;
                 InputBox.ActivateInputField();
@@ -54,31 +55,28 @@ namespace MultiMenu
             }
             else if (Input.GetButton("Submit") && showInput && cClient.CanChat)
             {
-                if (cClient.CanChatInChannel(Channel))
+                showInput = false;
+                string message = InputBox.text;
+                bool sendResult = (message != "" ? cClient.PublishMessage(Channel, message) : false);
+                if (sendResult)
                 {
-                    showInput = false;
-                    string message = InputBox.text;
-                    bool sendResult = (message != "" ? cClient.PublishMessage(Channel, message) : false);
-                    if (sendResult)
-                    {
-                        InputBox.text = "";
-                        InputBox.gameObject.SetActive(showInput);
-                        Cursor.lockState = oldLock;
-                        oldLock = CursorLockMode.Locked;
-                    }
-                    else
-                    {
-                        rotateMessages(1);
-                        chatHistory[chatHistory.Length - 1] = "Send Failed!";
-                        printChat();
-                        InputBox.enabled = showInput;
-
-                    }
+                    InputBox.text = "";
+                    InputBox.gameObject.SetActive(showInput);
+                    Cursor.lockState = oldLock;
+                    oldLock = CursorLockMode.Locked;
                 }
                 else
                 {
-                    cClient.Subscribe(Channel);
+                    rotateMessages(1);
+                    chatHistory[chatHistory.Length - 1] = "Send Failed!";
+                    printChat();
+                    InputBox.enabled = showInput;
+                    InputBox.gameObject.SetActive(showInput);
+                    Cursor.lockState = oldLock;
+                    oldLock = CursorLockMode.Locked;
+
                 }
+            
             }
         }
 

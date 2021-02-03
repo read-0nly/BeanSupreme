@@ -37,6 +37,8 @@ namespace BeanSupreme.v1
             newHT["falling"] = false;
             newHT["hasjump"] = false;
             newHT["health"] = 0;
+
+            newHT["Hat"] = new float[] {Random.Range(0,3)*0.5f, Random.Range(0, 3) * 0.5f, Random.Range(0, 3) * 0.5f };
             PhotonNetwork.LocalPlayer.SetCustomProperties(newHT);
 
         }

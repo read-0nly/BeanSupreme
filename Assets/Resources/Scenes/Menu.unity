@@ -635,9 +635,21 @@ PrefabInstance:
 
 '
       objectReference: {fileID: 0}
+    - target: {fileID: 7864850543146780242, guid: 0e4536f7e599d6e499910681d4c99857, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7864850543996501155, guid: 0e4536f7e599d6e499910681d4c99857, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 7864850544334335465, guid: 0e4536f7e599d6e499910681d4c99857, type: 3}
       propertyPath: m_Name
       value: HUD
+      objectReference: {fileID: 0}
+    - target: {fileID: 7864850544334335466, guid: 0e4536f7e599d6e499910681d4c99857, type: 3}
+      propertyPath: m_SortingOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7864850544334335469, guid: 0e4536f7e599d6e499910681d4c99857, type: 3}
       propertyPath: m_LocalPosition.x

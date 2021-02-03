@@ -21,7 +21,6 @@ namespace BeanSupreme.v1
 
         public override void setup()
         {
-            base.setup();
             PistolSpeed = (float)RoomManager.I.Settings["ShotgunSpeed"];
             pistol = g;
             //BasicGunSettings
@@ -32,6 +31,7 @@ namespace BeanSupreme.v1
             reloadDuration = (float)RoomManager.I.Settings["ShotgunReloadTime"];
             shotgunSpread = (float)RoomManager.I.Settings["ShotgunSpread"];
             shotgunAmount = (int)RoomManager.I.Settings["ShotgunAmount"];
+            base.setup();
         }
         public override void use()
         {

@@ -13,7 +13,7 @@ namespace BeanSupreme.v1
         public float BulletSpeedFactor;
         public float BulletSlowFactor;
         public float BulletDropSpeed;
-        public float PistolSpeed;
+        public float PistolSpeed = 1;
         public GameObject pistol;
         public float LastFire;
         public float FireRate = 0.1f;
@@ -33,11 +33,11 @@ namespace BeanSupreme.v1
         public override void setup()
         {
             base.setup();
-            BulletSpeedFactor = (float)RoomManager.I.Settings["BulletSpeedFactor"];// 0.5f);
             BulletSlowFactor = (float)RoomManager.I.Settings["BulletSlowFactor"];// 0.999f);
             BulletDropSpeed = (float)RoomManager.I.Settings["BulletDropSpeed"];// 0.5f);
             DamageFactor = (float)RoomManager.I.Settings["DamageFactor"];// 10f);
             FlashlightBrightness = (float)RoomManager.I.Settings["FlashlightBrightness"];// 1f);
+            BulletSpeedFactor = PistolSpeed * (float)RoomManager.I.Settings["BulletSpeedFactor"];
         }
         // Update is called once per frame
         public override void Update()
@@ -48,7 +48,18 @@ namespace BeanSupreme.v1
             }
 
         }
+        [PunRPC]
+        public void syncAmmo(int current, int total)
+        {
+            totalRounds = total;
+            clipRounds = current;
+        }
 
+        public override void drop()
+        {
+            PV.RPC("syncAmmo", RpcTarget.All, clipRounds, totalRounds);
+            base.drop();
+        }
         public override void use()
         {
             if (Time.time - LastFire > FireRate && !hasFired)

@@ -38,13 +38,19 @@ namespace BeanSupreme.v1
             Settings.Add("PistolMaxRound", 120);
             Settings.Add("PistolSpawnRounds", 18);
             Settings.Add("PistolReloadTime", 1f);
+            Settings.Add("SniperSpeed", 5f);
+            Settings.Add("SniperFireRate", 1.5f);
+            Settings.Add("SniperClipSize", 1);
+            Settings.Add("SniperMaxRound", 10);
+            Settings.Add("SniperSpawnRounds", 10);
+            Settings.Add("SniperReloadTime", 1f);
             Settings.Add("SMGSpeed", 0.7f);
             Settings.Add("SMGFireRate", 0.3f);
             Settings.Add("SMGClipSize", 32);
             Settings.Add("SMGMaxRound", 320);
             Settings.Add("SMGSpawnRounds", 160);
             Settings.Add("SMGReloadTime", 0.7f);
-            Settings.Add("ShotgunSpeed", 0.3f);
+            Settings.Add("ShotgunSpeed", 0.5f);
             Settings.Add("ShotgunFireRate", 1f);
             Settings.Add("ShotgunClipSize", 2);
             Settings.Add("ShotgunMaxRound", 16);
@@ -53,7 +59,7 @@ namespace BeanSupreme.v1
             Settings.Add("ShotgunSpread", 15f);
             Settings.Add("ShotgunAmount", 10);
             Settings.Add("BulletSpeedFactor", 0.5f);
-            Settings.Add("BulletSlowFactor", 0.999f);
+            Settings.Add("BulletSlowFactor", 1f);
             Settings.Add("BulletDropSpeed", 0.5f);
 
             //BasicPlayerSettings
@@ -84,13 +90,14 @@ namespace BeanSupreme.v1
             Settings.Add("FlashlightBrightness", 1f);
             Settings.Add("BaseFog", 0.5f);
 
-            Settings.Add("KillsToWin", 10);
+            Settings.Add("KillsToWin", 100);
 
             //g = PhotonNetwork.Instantiate(, spawnpoint.position, spawnpoint.rotation);
             string basepath = "Beta\\Prefabs";
             spawnableObjects.Add(Path.Combine(basepath, PistolObject.Prefab));
             spawnableObjects.Add(Path.Combine(basepath, SMGObject.Prefab));
             spawnableObjects.Add(Path.Combine(basepath, ShotgunObject.Prefab));
+            spawnableObjects.Add(Path.Combine(basepath, SniperObject.Prefab));
         }
 
         private void Awake()
@@ -207,7 +214,7 @@ namespace BeanSupreme.v1
                 }
                 playerSpawns = Players;
                 objectSpawns = Objects;
-                spawnItems = (int)((Objects.Length) / 2f);
+                spawnItems = (int)((Objects.Length));
 
                 if (PhotonNetwork.LocalPlayer.IsMasterClient) om = (PhotonNetwork.Instantiate(Path.Combine("Beta\\Prefabs", "ObjectManager"), Vector3.zero, Quaternion.identity)).GetComponent<ObjectManager>();                
                 
