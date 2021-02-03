@@ -14,7 +14,7 @@ namespace BeanSupreme.v1
         public float scopeFOV = 30;
         public float camSens = 2f;
         public bool scoped = false;
-        public virtual void use2()
+        public override void use2()
         {
             Camera c = parentCam.GetComponentInChildren<Camera>();
             if (scoped)

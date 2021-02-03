@@ -197,7 +197,7 @@ Lives: {6}
             Debug.Log("Use2");
             try
             {
-                ((ScopedFireableObject)inventory[CurrentItemIndex]).use2();
+                inventory[CurrentItemIndex].use2();
             }
             catch { };
         }

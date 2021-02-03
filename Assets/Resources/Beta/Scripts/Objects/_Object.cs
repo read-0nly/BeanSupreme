@@ -65,6 +65,9 @@ namespace BeanSupreme.v1
             transform.rotation = (parentCam.name == "Head" ? Quaternion.Euler(transform.parent.rotation.eulerAngles) : parentCam.rotation);
         }
         public virtual void use() { }
+
+        public virtual void use2()
+        { }
         public virtual void toss() { }
         public virtual void grab(_Object o)
         {
