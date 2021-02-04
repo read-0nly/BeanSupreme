@@ -14,6 +14,7 @@ namespace BeanSupreme.v1
         public override void Start()
         {
             setup();
+            base.Start();
         }
 
         public override void setup()

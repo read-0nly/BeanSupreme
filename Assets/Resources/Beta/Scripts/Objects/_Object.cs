@@ -30,10 +30,10 @@ namespace BeanSupreme.v1
             try
             {
                 PV = this.gameObject.GetComponent<PhotonView>();
+                if (!PV.IsMine) makePhysical(false, true, true);
             }
             catch { };
         }
-
         // Update is called once per frame
         public virtual void Update()
         {
@@ -83,14 +83,14 @@ namespace BeanSupreme.v1
             {
                 if (PV.ObservedComponents.Contains(GetComponent<PhotonTransformView>()))
                     PV.ObservedComponents.Remove(GetComponent<PhotonTransformView>());
-                makePhysical(false,vis);
+                makePhysical(false,false,vis);
                 transform.parent = PhotonView.Find(pid).gameObject.transform.Find("Hand");
                 if(transform.childCount>0) transform.GetChild(0).localPosition = new Vector3(0, 0, 0);
                 transform.localPosition = new Vector3(0, 0, 0);
                 transform.position = PhotonView.Find(pid).gameObject.transform.Find("Hand").position;
                 transform.rotation = PhotonView.Find(pid).gameObject.transform.Find("Hand").rotation;
                 parentCam = PhotonView.Find(pid).gameObject.transform;
-                makePhysical(false,vis);
+                makePhysical(false,false,vis);
             }
             else
             {
@@ -98,22 +98,23 @@ namespace BeanSupreme.v1
                 parentCam = null;
                 if(!PV.ObservedComponents.Contains(GetComponent<PhotonTransformView>()))
                     PV.ObservedComponents.Add(GetComponent<PhotonTransformView>());
-                makePhysical(true,vis);
+
+                if (PhotonNetwork.LocalPlayer == PhotonNetwork.MasterClient && transform.parent == null) makePhysical(true, true, vis); else makePhysical(false, true, vis);
             }
         }
 
-        public void makePhysical( bool phys, bool vis)
+        public void makePhysical( bool phys, bool col, bool vis)
         {
             try
             {
-                if (gameObject.GetComponent<Rigidbody>()) {gameObject.GetComponent<Rigidbody>().isKinematic = !phys; }
-                else { gameObject.GetComponentInChildren<Rigidbody>().isKinematic = !phys; }
+                if (GetComponent<Rigidbody>()) GetComponent<Rigidbody>().isKinematic = !phys;
+                if (GetComponentsInChildren<Rigidbody>().Length > 0) foreach (Rigidbody r in GetComponentsInChildren<Rigidbody>()) r.isKinematic = !phys;
             }
             catch { }
             try
             {
-                if (gameObject.GetComponent<BoxCollider>()) { gameObject.GetComponent<BoxCollider>().isTrigger = !phys; }
-                else { gameObject.GetComponentInChildren<BoxCollider>().isTrigger = !phys; }
+                if (gameObject.GetComponent<BoxCollider>()) { gameObject.GetComponent<BoxCollider>().isTrigger = !col; }
+                if (GetComponentsInChildren<BoxCollider>().Length > 0) foreach (BoxCollider r in GetComponentsInChildren<BoxCollider>()) r.isTrigger=!col;
             }
             catch { }
 
@@ -164,7 +165,6 @@ namespace BeanSupreme.v1
 
         public void OnControllerChange(Player newController, Player previousController)
         {
-            
         }
 
 

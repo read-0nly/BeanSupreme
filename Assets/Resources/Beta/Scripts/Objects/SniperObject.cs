@@ -16,6 +16,7 @@ namespace BeanSupreme.v1
             setup();
             scopeFOV = 15;
             camSens = 2f;
+            base.Start();
 
         }
 

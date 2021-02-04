@@ -7,7 +7,6 @@ namespace BeanSupreme.v1
 {
     public class GenericObject : _Object
     {
-        bool triggered = false;
         // Start is called before the first frame update
         public override void Start()
         {
@@ -22,22 +21,22 @@ namespace BeanSupreme.v1
 
         public override void use()
         {
-            base.use();
-            this.makePhysical(true, true);
+            PV.RPC("snap", Photon.Pun.RpcTarget.All, PlayerManager.I.Player.GetComponent<PlayerObject>().head.GetComponent<Photon.Pun.PhotonView>().ViewID, false);
+            this.makePhysical(false,true, true);
             this.GetComponent<Rigidbody>().isKinematic = true;
             this.transform.localPosition = new Vector3(0, 0, 0);
             this.transform.rotation = Quaternion.Euler(0, 0, 0);
+            Debug.Log("Owner=" + PV.Owner.ActorNumber + ";Self=" + Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber);
         }
         public override void use2()
         {
             base.use();
-            this.makePhysical(false, true);
+            this.makePhysical(false, false, true);
             this.transform.localPosition = new Vector3(0, 0, 0);
             this.transform.rotation = Quaternion.Euler(0, 0, 0);
         }
         public override void drop()
         {
-            triggered = false;
             base.drop();
         }
     }

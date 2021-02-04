@@ -29,13 +29,24 @@ namespace BeanSupreme.v1
 
             }
             scoped = !scoped;
-            
 
+
+        }
+
+        [PunRPC]
+        public override void snap(int pid, bool vis = false)
+
+        { 
+            PlayerManager.I.Player.GetComponent<PlayerObject>().cam.fieldOfView = 60;
+            PlayerManager.I.GetComponent<PlayerControl>().camSens = PlayerControl.camsensMax;
+            scoped = false;
+            base.snap(pid, vis);
         }
         public override void drop()
         {
             PlayerManager.I.Player.GetComponent<PlayerObject>().cam.fieldOfView = 60;
             PlayerManager.I.GetComponent<PlayerControl>().camSens = PlayerControl.camsensMax;
+            scoped = false;
             base.drop();
         }
     }

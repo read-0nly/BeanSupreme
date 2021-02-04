@@ -90,7 +90,7 @@ namespace BeanSupreme.v1
             Settings.Add("FlashlightBrightness", 1f);
             Settings.Add("BaseFog", 0.5f);
 
-            Settings.Add("KillsToWin", 100);
+            Settings.Add("KillsToWin", 1);
 
             //g = PhotonNetwork.Instantiate(, spawnpoint.position, spawnpoint.rotation);
             string basepath = "Beta\\Prefabs";
@@ -122,7 +122,7 @@ namespace BeanSupreme.v1
         // Update is called once per frame
         void Update()
         {
-            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Winner")) if ((int)PhotonNetwork.CurrentRoom.CustomProperties["Winner"] > -1) doWin();
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Winner")) if ((int)PhotonNetwork.CurrentRoom.CustomProperties["Winner"] > -1 && !WinScreen.I.winTriggered) doWin();
         }
 
         public override void OnEnable()
@@ -148,11 +148,8 @@ namespace BeanSupreme.v1
 
         public void doWin()
         {
-            PhotonNetwork.LeaveRoom();
-            PhotonNetwork.Destroy(PlayerManager.I.gameObject);
+            WinScreen.I.ShowWin(PhotonNetwork.CurrentRoom.GetPlayer((int)PhotonNetwork.CurrentRoom.CustomProperties["Winner"]).NickName);
             Cursor.lockState=CursorLockMode.None;
-            SceneManager.LoadScene(0);
-            PhotonNetwork.Destroy(gameObject);
         }
 
         public void checkWin()

@@ -203,9 +203,9 @@ Lives: {6}
             }
             catch { };
         }
-        public void use2()
+        public override void use2()
         {
-            Debug.Log("Use2");
+            
             try
             {
                 inventory[CurrentItemIndex].use2();
@@ -281,7 +281,7 @@ Lives: {6}
             if (inventory.Count < MaxInventory && o && PV.IsMine)
             {
                 o.PV.TransferOwnership(pv.Owner.ActorNumber);
-                o.PV.RPC("snap", RpcTarget.All, head.gameObject.GetComponent<PhotonView>().ViewID,false);
+                o.PV.RPC("snap", RpcTarget.All, head.gameObject.GetComponent<PhotonView>().ViewID,true);
                 inventory.Add(o);
                 swap(1);
             }
@@ -342,6 +342,7 @@ Lives: {6}
             item.PV.RPC("snap", RpcTarget.All, -1,true);
             inventory.RemoveAt(CurrentItemIndex);
             item.gameObject.GetComponent<_Object>().PV.TransferOwnership(PhotonNetwork.CurrentRoom.masterClientId);
+            if(PhotonNetwork.CurrentRoom.masterClientId != PhotonNetwork.LocalPlayer.ActorNumber) item.makePhysical(false, true, true);
             item.transform.localScale = new Vector3(1, 1, 1);
             this.swap(-1);
 

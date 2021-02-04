@@ -5,18 +5,11 @@ using UnityEngine;
 namespace BeanSupreme.v1
 {
 
-    public class ThrowableObject : MonoBehaviour
+    public class ThrowableObject : _Object
     {
-        // Start is called before the first frame update
-        void Start()
-        {
 
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
+        public float throwForce = 5f;
+        public float blastForce = 50f;
+        public float blastRange = 2f;
     }
 }
