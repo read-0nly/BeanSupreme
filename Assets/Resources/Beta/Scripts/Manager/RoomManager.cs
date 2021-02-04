@@ -45,7 +45,7 @@ namespace BeanSupreme.v1
             Settings.Add("SniperSpawnRounds", 10);
             Settings.Add("SniperReloadTime", 1f);
             Settings.Add("SMGSpeed", 0.7f);
-            Settings.Add("SMGFireRate", 0.3f);
+            Settings.Add("SMGFireRate", 0.2f);
             Settings.Add("SMGClipSize", 32);
             Settings.Add("SMGMaxRound", 320);
             Settings.Add("SMGSpawnRounds", 160);
