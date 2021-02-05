@@ -90,7 +90,7 @@ namespace BeanSupreme.v1
             Settings.Add("FlashlightBrightness", 1f);
             Settings.Add("BaseFog", 0.5f);
 
-            Settings.Add("KillsToWin", 1);
+            Settings.Add("KillsToWin", 9);
 
             //g = PhotonNetwork.Instantiate(, spawnpoint.position, spawnpoint.rotation);
             string basepath = "Beta\\Prefabs";
